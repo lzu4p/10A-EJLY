@@ -1,0 +1,11 @@
+com.example.sistema_asistencia_y_nomina.app-jetified-window-1.0.0-beta04-0 C:\Users\Izu\.gradle\caches\transforms-3\1d2dba50c7235aa31be875e090dc8238\transformed\jetified-window-1.0.0-beta04\res
+com.example.sistema_asistencia_y_nomina.app-jetified-window-java-1.0.0-beta04-1 C:\Users\Izu\.gradle\caches\transforms-3\1de1570686edd59a7edb3a4c378e37d0\transformed\jetified-window-java-1.0.0-beta04\res
+com.example.sistema_asistencia_y_nomina.app-core-1.6.0-2 C:\Users\Izu\.gradle\caches\transforms-3\a276bea2b838e2f0e680d899d6091573\transformed\core-1.6.0\res
+com.example.sistema_asistencia_y_nomina.app-jetified-annotation-experimental-1.1.0-3 C:\Users\Izu\.gradle\caches\transforms-3\fbdfa6232f8d10234eb2f25765eb93e5\transformed\jetified-annotation-experimental-1.1.0\res
+com.example.sistema_asistencia_y_nomina.app-debug-4 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\android\app\src\debug\res
+com.example.sistema_asistencia_y_nomina.app-main-5 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\android\app\src\main\res
+com.example.sistema_asistencia_y_nomina.app-pngs-6 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\build\app\generated\res\pngs\debug
+com.example.sistema_asistencia_y_nomina.app-resValues-7 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\build\app\generated\res\resValues\debug
+com.example.sistema_asistencia_y_nomina.app-packageDebugResources-8 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\build\app\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.example.sistema_asistencia_y_nomina.app-packageDebugResources-9 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\build\app\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.example.sistema_asistencia_y_nomina.app-merged_res-10 D:\Luis\GitHub\10A-EJLY\SistemaAsistenciaNomina\sistema_asistencia_y_nomina\build\app\intermediates\merged_res\debug

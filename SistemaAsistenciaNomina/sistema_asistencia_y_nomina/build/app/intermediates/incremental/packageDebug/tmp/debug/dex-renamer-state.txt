@@ -1,0 +1,4 @@
+#Tue Jun 23 01:53:28 CST 2026
+base.0=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
