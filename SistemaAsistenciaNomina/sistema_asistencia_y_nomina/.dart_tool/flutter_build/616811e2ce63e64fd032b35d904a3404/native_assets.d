@@ -1,0 +1,1 @@
+ D:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\.dart_tool\\flutter_build\\616811e2ce63e64fd032b35d904a3404\\native_assets.yaml: 

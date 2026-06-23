@@ -1,0 +1,72 @@
+# .github/workflows/ci.yml
+# Pipeline CI - Sistema de Control de Asistencia y Nómina
+# Lenguaje: Flutter
+# Arquitectura Desarrollo: MVVM
+# Patron Diseño: Repository + Observer
+# Metodología: Scrum
+# Luis Alfredo Ramirez Huerta
+
+name: CI - Sistema Asistencia y Nomina
+
+# Cuando se aplica el pipeline?
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout de codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar SDK de Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Descargar dependencias
+        run: flutter pub get
+
+      - name: Verificar formato del código
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analizar el proyecto
+        run: flutter analyze
+
+      - name: Ejecutar pruebas desde flutter
+        run: flutter test --coverage
+
+      # - name: Ejecutar pruebas desde sonarsource
+      #   uses: SonarSource/sonarcloud-github-action@master
+      # falta mas, necesito crear cuenta en SonarCloud
+
+      - name: Recopilar reporte
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov.info
+
+      - name: Compilar app
+        run: flutter build apk --release
+
+      - name: Guardar artefacto del build
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  notify-on-failure:
+    name: Notificar al servidor el pipeline fallido
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: failure()
+    steps:
+      - name: Notificar por discord
+        run: echo "[TEST] Pipeline fallido. Se requiere revisión y testeo manual."
+        # Agregar webhook de discord para notificación automática
+        # Similar al webhook de cobblemon spawn notifications
