@@ -77,6 +77,14 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     if (resultado == true) _cargar();
   }
 
+  Future<void> _irAgregar() async {
+    final resultado = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const UsuarioFormScreen()),
+    );
+    if (resultado == true) _cargar();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,6 +95,11 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       drawer: AppDrawer(
         usuario: widget.usuario,
         pantallaActual: 'usuarios',
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _irAgregar,
+        icon: const Icon(Icons.person_add),
+        label: const Text('Nuevo usuario'),
       ),
       body: Column(
         children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import '../screens/productos_screen.dart';
 import '../screens/usuarios_screen.dart';
 import '../screens/login_screen.dart';
@@ -30,7 +31,7 @@ class AppDrawer extends StatelessWidget {
             ),
             accountEmail: Text(
               '${usuario['username'] ?? ''} · $tipo',
-              style: TextStyle(color: colorScheme.onPrimary.withOpacity(0.8)),
+              style: TextStyle(color: colorScheme.onPrimary.withValues(alpha: 0.8)),
             ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: colorScheme.primaryContainer,
@@ -100,9 +101,10 @@ class AppDrawer extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
+              onTap: () async {
+                final nav = Navigator.of(context);
+                await ApiService.logout(); // invalida el token en el servidor
+                nav.pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (_) => false,
                 );

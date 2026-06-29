@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-docs",
+      "autoPort": false,
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd /d D:\\Luis\\GitHub\\10A-EJLY\\ApiSistemaAsistenciaNomina && venv\\Scripts\\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8000"
+      ],
+      "port": 8000
+    }
+  ]
+}

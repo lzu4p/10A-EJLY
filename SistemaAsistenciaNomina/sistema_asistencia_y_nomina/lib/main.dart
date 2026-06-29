@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'app_globals.dart';
+import 'screens/auth_gate.dart';
 import 'screens/login_screen.dart';
 
 void main() {
@@ -13,11 +15,16 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Sistema Asistencia y Nómina',
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
         useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      // Ruta usada para volver al login cuando expira el token.
+      routes: {
+        '/login': (_) => const LoginScreen(),
+      },
+      home: const AuthGate(),
     );
   }
 }

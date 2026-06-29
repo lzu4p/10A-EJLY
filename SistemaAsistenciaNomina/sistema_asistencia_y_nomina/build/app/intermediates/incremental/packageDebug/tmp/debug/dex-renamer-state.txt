@@ -1,13 +1,25 @@
-#Wed Jun 24 01:44:49 CST 2026
+#Sun Jun 28 17:33:47 CST 2026
 base.0=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.2=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\15\\classes.dex
 base.3=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\1\\classes.dex
+base.4=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeLibDexDebug\\2\\classes.dex
+base.5=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeLibDexDebug\\4\\classes.dex
+base.6=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeLibDexDebug\\6\\classes.dex
+base.7=D\:\\Luis\\GitHub\\10A-EJLY\\SistemaAsistenciaNomina\\sistema_asistencia_y_nomina\\build\\app\\intermediates\\dex\\debug\\mergeLibDexDebug\\9\\classes.dex
 path.0=classes.dex
 path.1=0/classes.dex
 path.2=15/classes.dex
 path.3=1/classes.dex
+path.4=2/classes.dex
+path.5=4/classes.dex
+path.6=6/classes.dex
+path.7=9/classes.dex
 renamed.0=classes.dex
 renamed.1=classes2.dex
 renamed.2=classes3.dex
 renamed.3=classes4.dex
+renamed.4=classes5.dex
+renamed.5=classes6.dex
+renamed.6=classes7.dex
+renamed.7=classes8.dex
