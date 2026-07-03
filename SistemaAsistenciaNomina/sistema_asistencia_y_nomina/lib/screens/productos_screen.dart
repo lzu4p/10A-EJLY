@@ -129,14 +129,33 @@ class _ProductosScreenState extends State<ProductosScreen> {
             child: _cargando
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
+                    // Manejo de error de red: mensaje amigable + reintentar.
                     ? Center(
                         child: Padding(
                           padding: const EdgeInsets.all(24),
-                          child: Text(
-                            'Error: $_error',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.error),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.wifi_off_rounded,
+                                  size: 56,
+                                  color:
+                                      Theme.of(context).colorScheme.error),
+                              const SizedBox(height: 12),
+                              Text(
+                                '$_error',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .error),
+                              ),
+                              const SizedBox(height: 16),
+                              FilledButton.icon(
+                                onPressed: _cargar,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Reintentar'),
+                              ),
+                            ],
                           ),
                         ),
                       )

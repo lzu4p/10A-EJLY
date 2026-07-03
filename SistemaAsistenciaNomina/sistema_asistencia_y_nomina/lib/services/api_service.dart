@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../app_globals.dart';
@@ -17,7 +18,31 @@ class SesionExpirada implements Exception {
   String toString() => mensaje;
 }
 
+/// Manejo de error de red: se lanza cuando no hay conexión con el servidor
+/// (sin internet, API apagada, host inalcanzable).
+class ErrorDeRed implements Exception {
+  final String mensaje;
+  ErrorDeRed(
+      [this.mensaje =
+          'Sin conexión al servidor.\nVerifica tu red o que la API esté activa.']);
+  @override
+  String toString() => mensaje;
+}
+
 class ApiService {
+  // Ejecuta una petición HTTP convirtiendo los fallos de conexión
+  // (SocketException, ClientException) en un ErrorDeRed amigable.
+  static Future<http.Response> _enviar(
+      Future<http.Response> Function() peticion) async {
+    try {
+      return await peticion();
+    } on SocketException {
+      throw ErrorDeRed();
+    } on http.ClientException {
+      throw ErrorDeRed();
+    }
+  }
+
   // Encabezados con el token guardado (si existe).
   static Future<Map<String, String>> _headers() async {
     final token = await TokenStorage.leer();
@@ -43,11 +68,11 @@ class ApiService {
   /// si las credenciales son incorrectas.
   static Future<Map<String, dynamic>?> login(
       String usuario, String contrasena) async {
-    final r = await http.post(
-      Uri.parse('$_base/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'username': usuario, 'password': contrasena}),
-    );
+    final r = await _enviar(() => http.post(
+          Uri.parse('$_base/login'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'username': usuario, 'password': contrasena}),
+        ));
     if (r.statusCode != 200) return null;
 
     final data = jsonDecode(r.body) as Map<String, dynamic>;
@@ -86,8 +111,9 @@ class ApiService {
   // ---------- Usuarios ----------
 
   static Future<List<Map<String, dynamic>>> fetchUsuarios() async {
+    final h = await _headers();
     final r =
-        await http.get(Uri.parse('$_base/usuarios'), headers: await _headers());
+        await _enviar(() => http.get(Uri.parse('$_base/usuarios'), headers: h));
     _verificarSesion(r);
     if (r.statusCode != 200) {
       throw Exception('Error al obtener usuarios: ${r.statusCode}');
@@ -97,11 +123,12 @@ class ApiService {
   }
 
   static Future<void> crearUsuario(Map<String, dynamic> datos) async {
-    final r = await http.post(
-      Uri.parse('$_base/usuarios'),
-      headers: await _headers(),
-      body: jsonEncode(datos),
-    );
+    final h = await _headers();
+    final r = await _enviar(() => http.post(
+          Uri.parse('$_base/usuarios'),
+          headers: h,
+          body: jsonEncode(datos),
+        ));
     _verificarSesion(r);
     if (r.statusCode == 409) {
       throw Exception('El nombre de usuario ya existe');
@@ -113,11 +140,12 @@ class ApiService {
 
   static Future<void> actualizarUsuario(
       String id, Map<String, dynamic> datos) async {
-    final r = await http.put(
-      Uri.parse('$_base/usuarios/$id'),
-      headers: await _headers(),
-      body: jsonEncode(datos),
-    );
+    final h = await _headers();
+    final r = await _enviar(() => http.put(
+          Uri.parse('$_base/usuarios/$id'),
+          headers: h,
+          body: jsonEncode(datos),
+        ));
     _verificarSesion(r);
     if (r.statusCode != 200) {
       throw Exception('Error al actualizar usuario: ${r.statusCode}');
@@ -127,8 +155,9 @@ class ApiService {
   // ---------- Productos ----------
 
   static Future<List<Map<String, dynamic>>> fetchProductos() async {
-    final r = await http.get(
-        Uri.parse('$_base/productos'), headers: await _headers());
+    final h = await _headers();
+    final r = await _enviar(
+        () => http.get(Uri.parse('$_base/productos'), headers: h));
     _verificarSesion(r);
     if (r.statusCode != 200) {
       throw Exception('Error al obtener productos: ${r.statusCode}');
@@ -138,11 +167,12 @@ class ApiService {
   }
 
   static Future<void> crearProducto(Map<String, dynamic> datos) async {
-    final r = await http.post(
-      Uri.parse('$_base/productos'),
-      headers: await _headers(),
-      body: jsonEncode(datos),
-    );
+    final h = await _headers();
+    final r = await _enviar(() => http.post(
+          Uri.parse('$_base/productos'),
+          headers: h,
+          body: jsonEncode(datos),
+        ));
     _verificarSesion(r);
     if (r.statusCode != 201) {
       throw Exception('Error al crear producto: ${r.statusCode}');
@@ -151,11 +181,12 @@ class ApiService {
 
   static Future<void> actualizarProducto(
       String id, Map<String, dynamic> datos) async {
-    final r = await http.put(
-      Uri.parse('$_base/productos/$id'),
-      headers: await _headers(),
-      body: jsonEncode(datos),
-    );
+    final h = await _headers();
+    final r = await _enviar(() => http.put(
+          Uri.parse('$_base/productos/$id'),
+          headers: h,
+          body: jsonEncode(datos),
+        ));
     _verificarSesion(r);
     if (r.statusCode != 200) {
       throw Exception('Error al actualizar producto: ${r.statusCode}');

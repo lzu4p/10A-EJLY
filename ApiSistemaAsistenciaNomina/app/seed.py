@@ -15,8 +15,10 @@ from app.models import Usuario, Producto
 from app.security import hash_password
 
 # Snapshot de respaldo (por si MockAPI no responde).
+# NOTA: contraseñas de demostración, NO reales. Con conexión a MockAPI,
+# los datos reales se importan desde ahí y este respaldo no se usa.
 RESPALDO_USERS = [
-    {"id": "1", "username": "izu", "password": "Ch1bPek020!",
+    {"id": "1", "username": "izu", "password": "admin123",
      "nombre": "Luis Ramirez", "tipo": "admin"},
     {"id": "2", "username": "username 2", "password": "password 2",
      "nombre": "nombre 2", "tipo": "user"},
