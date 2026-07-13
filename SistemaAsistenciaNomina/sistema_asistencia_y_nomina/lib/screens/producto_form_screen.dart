@@ -56,8 +56,7 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
 
     try {
       if (_esEdicion) {
-        await ApiService.actualizarProducto(
-            '${widget.producto!['id']}', datos);
+        await ApiService.actualizarProducto('${widget.producto!['id']}', datos);
       } else {
         await ApiService.crearProducto(datos);
       }
@@ -129,7 +128,8 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
                 ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Campo requerido';
-                  if (double.tryParse(v.trim()) == null) return 'Número inválido';
+                  if (double.tryParse(v.trim()) == null)
+                    return 'Número inválido';
                   return null;
                 },
               ),

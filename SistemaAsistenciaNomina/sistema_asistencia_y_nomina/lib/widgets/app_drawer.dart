@@ -31,7 +31,8 @@ class AppDrawer extends StatelessWidget {
             ),
             accountEmail: Text(
               '${usuario['username'] ?? ''} · $tipo',
-              style: TextStyle(color: colorScheme.onPrimary.withValues(alpha: 0.8)),
+              style: TextStyle(
+                  color: colorScheme.onPrimary.withValues(alpha: 0.8)),
             ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: colorScheme.primaryContainer,

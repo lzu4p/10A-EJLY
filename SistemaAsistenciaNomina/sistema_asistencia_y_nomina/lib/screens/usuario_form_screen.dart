@@ -17,7 +17,7 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
   final _passwordCtrl = TextEditingController();
 
   bool _mostrarPassword = false; // ver/ocultar — solo en alta de nuevo usuario
-  bool _restablecer = false;     // mostrar campo de nueva contraseña — en edición
+  bool _restablecer = false; // mostrar campo de nueva contraseña — en edición
   bool _guardando = false;
   String _tipoSeleccionado = 'user';
 
@@ -135,8 +135,8 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined),
                       tooltip: _mostrarPassword ? 'Ocultar' : 'Mostrar',
-                      onPressed: () => setState(
-                          () => _mostrarPassword = !_mostrarPassword),
+                      onPressed: () =>
+                          setState(() => _mostrarPassword = !_mostrarPassword),
                     ),
                   ),
                   validator: (v) =>

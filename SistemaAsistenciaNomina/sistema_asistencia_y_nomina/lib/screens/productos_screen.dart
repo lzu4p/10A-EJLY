@@ -138,16 +138,13 @@ class _ProductosScreenState extends State<ProductosScreen> {
                             children: [
                               Icon(Icons.wifi_off_rounded,
                                   size: 56,
-                                  color:
-                                      Theme.of(context).colorScheme.error),
+                                  color: Theme.of(context).colorScheme.error),
                               const SizedBox(height: 12),
                               Text(
                                 '$_error',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .error),
+                                    color: Theme.of(context).colorScheme.error),
                               ),
                               const SizedBox(height: 16),
                               FilledButton.icon(

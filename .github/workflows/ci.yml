@@ -11,14 +11,16 @@ name: CI - Sistema Asistencia y Nomina
 # Cuando se aplica el pipeline?
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop]
   pull_request:
     branches: [ main ]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
+    defaults:
+        run:
+            working-directory: SistemaAsistenciaNomina/sistema_asistencia_y_nomina
     steps:
       - name: Checkout de codigo
         uses: actions/checkout@v4
@@ -49,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/lcov.info
+          path: SistemaAsistenciaNomina/sistema_asistencia_y_nomina/coverage/lcov.info
 
       - name: Compilar app
         run: flutter build apk --release
@@ -58,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: SistemaAsistenciaNomina/sistema_asistencia_y_nomina/build/app/outputs/flutter-apk/app-release.apk
 
   notify-on-failure:
     name: Notificar al servidor el pipeline fallido
