@@ -43,7 +43,9 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
   }
 
   Future<void> _guardar() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() => _guardando = true);
 
@@ -61,10 +63,14 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
         await ApiService.crearProducto(datos);
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       Navigator.pop(context, true); // true = hubo cambios
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -72,7 +78,9 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _guardando = false);
+      if (mounted) {
+        setState(() => _guardando = false);
+      }
     }
   }
 
@@ -127,9 +135,12 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Campo requerido';
-                  if (double.tryParse(v.trim()) == null)
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Campo requerido';
+                  }
+                  if (double.tryParse(v.trim()) == null) {
                     return 'Número inválido';
+                  }
                   return null;
                 },
               ),
@@ -146,8 +157,12 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Campo requerido';
-                  if (int.tryParse(v.trim()) == null) return 'Número inválido';
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Campo requerido';
+                  }
+                  if (int.tryParse(v.trim()) == null) {
+                    return 'Número inválido';
+                  }
                   return null;
                 },
               ),

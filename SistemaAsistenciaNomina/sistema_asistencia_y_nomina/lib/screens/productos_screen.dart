@@ -73,7 +73,9 @@ class _ProductosScreenState extends State<ProductosScreen> {
       context,
       MaterialPageRoute(builder: (_) => const ProductoFormScreen()),
     );
-    if (resultado == true) _cargar();
+    if (resultado == true) {
+      _cargar();
+    }
   }
 
   Future<void> _irEditar(Map<String, dynamic> producto) async {
@@ -83,7 +85,9 @@ class _ProductosScreenState extends State<ProductosScreen> {
         builder: (_) => ProductoFormScreen(producto: producto),
       ),
     );
-    if (resultado == true) _cargar();
+    if (resultado == true) {
+      _cargar();
+    }
   }
 
   @override

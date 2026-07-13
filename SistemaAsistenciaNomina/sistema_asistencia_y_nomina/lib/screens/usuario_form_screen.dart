@@ -46,7 +46,9 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
   }
 
   Future<void> _guardar() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() => _guardando = true);
 
@@ -69,15 +71,21 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
       } else {
         await ApiService.crearUsuario(datos);
       }
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       Navigator.pop(context, true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$e'), backgroundColor: Colors.red.shade700),
       );
     } finally {
-      if (mounted) setState(() => _guardando = false);
+      if (mounted) {
+        setState(() => _guardando = false);
+      }
     }
   }
 
@@ -153,7 +161,9 @@ class _UsuarioFormScreenState extends State<UsuarioFormScreen> {
                   value: _restablecer,
                   onChanged: (val) => setState(() {
                     _restablecer = val;
-                    if (!val) _passwordCtrl.clear();
+                    if (!val) {
+                      _passwordCtrl.clear();
+                    }
                   }),
                 ),
                 if (_restablecer)

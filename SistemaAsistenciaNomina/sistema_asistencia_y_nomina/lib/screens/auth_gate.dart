@@ -23,7 +23,9 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _decidir() async {
     final usuario = await ApiService.validarSesion();
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

@@ -25,7 +25,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _acceder() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() => _cargando = true);
 
@@ -35,7 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
         _contrasenaCtrl.text,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       if (user != null) {
         Navigator.pushReplacement(
@@ -48,9 +52,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _mostrarError('Usuario o contraseña incorrectos.');
       }
     } catch (_) {
-      if (mounted) _mostrarError('No se pudo conectar al servidor.');
+      if (mounted) {
+        _mostrarError('No se pudo conectar al servidor.');
+      }
     } finally {
-      if (mounted) setState(() => _cargando = false);
+      if (mounted) {
+        setState(() => _cargando = false);
+      }
     }
   }
 

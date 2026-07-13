@@ -74,7 +74,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
         builder: (_) => UsuarioFormScreen(usuario: user),
       ),
     );
-    if (resultado == true) _cargar();
+    if (resultado == true) {
+      _cargar();
+    }
   }
 
   Future<void> _irAgregar() async {
@@ -82,7 +84,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       context,
       MaterialPageRoute(builder: (_) => const UsuarioFormScreen()),
     );
-    if (resultado == true) _cargar();
+    if (resultado == true) {
+      _cargar();
+    }
   }
 
   @override

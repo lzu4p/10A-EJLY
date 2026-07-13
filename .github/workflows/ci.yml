@@ -69,6 +69,8 @@ jobs:
     if: failure()
     steps:
       - name: Notificar por discord
-        run: echo "[TEST] Pipeline fallido. Se requiere revisión y testeo manual."
         # Agregar webhook de discord para notificación automática
         # Similar al webhook de cobblemon spawn notifications
+        env:
+            WEBHOOK_URL: ${{secrets.DISCORD_WEBHOOK}}
+        run: | curl -sS -H "Content-Type: application/json" -d "{\"content\": \"**Pipeline fallido** en ${{ github.repository }}\\n• Rama: ${{ github.ref_name }}\\n• Autor: ${{ github.actor }}\\n• Detalles: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" "$WEBHOOK_URL"

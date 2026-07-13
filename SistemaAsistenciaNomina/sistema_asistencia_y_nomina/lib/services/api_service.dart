@@ -73,7 +73,9 @@ class ApiService {
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'username': usuario, 'password': contrasena}),
         ));
-    if (r.statusCode != 200) return null;
+    if (r.statusCode != 200) {
+      return null;
+    }
 
     final data = jsonDecode(r.body) as Map<String, dynamic>;
     await TokenStorage.guardar(data['access_token'] as String);
@@ -95,7 +97,9 @@ class ApiService {
   static Future<Map<String, dynamic>?> validarSesion() async {
     try {
       final token = await TokenStorage.leer();
-      if (token == null) return null;
+      if (token == null) {
+        return null;
+      }
       final r =
           await http.get(Uri.parse('$_base/me'), headers: await _headers());
       if (r.statusCode == 200) {
