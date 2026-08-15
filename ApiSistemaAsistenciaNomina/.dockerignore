@@ -1,0 +1,29 @@
+# Archivos que NO deben entrar en la imagen Docker.
+# Reduce el tamano de la imagen y evita filtrar datos locales o secretos.
+
+# Entornos virtuales locales (se reinstalan dentro de la imagen)
+venv/
+.venv/
+
+# Cache de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de datos local y logs (datos de la maquina de desarrollo)
+*.db
+*.log
+
+# Secretos y configuracion local
+.env
+
+# Configuracion de editores
+.idea/
+.vscode/
+
+# Control de versiones y documentacion
+.git/
+.gitignore
+README.md
+Dockerfile
+.dockerignore

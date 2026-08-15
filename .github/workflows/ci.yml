@@ -1,0 +1,284 @@
+# .github/workflows/ci.yml
+# Pipeline CI/CD - Sistema de Control de Asistencia y Nómina
+# Lenguaje: Flutter + Python
+# Arquitectura Desarrollo: MVVM
+# Patron Diseño: Repository + Observer
+# Metodología: Scrum
+# Luis Alfredo Ramirez Huerta
+
+name: CI/CD - Sistema Asistencia y Nomina
+
+# Cuando se aplica el pipeline?
+on:
+  push:
+    branches: [ main, develop]
+  pull_request:
+    branches: [ main ]
+
+env:
+  IMAGE_NAME: sistema-asistencia-nomina-api
+  FLUTTER_DIR: SistemaAsistenciaNomina/sistema_asistencia_y_nomina
+  API_DIR: ApiSistemaAsistenciaNomina
+
+jobs:
+  # ---------------- CI ----------------
+  build-and-test:
+    name: CI - Compilar y probar app Flutter
+    runs-on: ubuntu-latest
+    defaults:
+        run:
+            working-directory: SistemaAsistenciaNomina/sistema_asistencia_y_nomina
+    steps:
+      - name: Checkout de codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar SDK de Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # Version fija: con '3.x' se instalaba la mas nueva y rompia el build
+          flutter-version: '3.44.3'
+          channel: 'stable'
+
+      - name: Descargar dependencias
+        run: flutter pub get
+
+      - name: Verificar formato del código
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analizar el proyecto
+        run: flutter analyze
+
+      - name: Ejecutar pruebas desde flutter
+        run: flutter test --coverage
+
+      # - name: Ejecutar pruebas desde sonarsource
+      #   uses: SonarSource/sonarcloud-github-action@master
+      # falta mas, necesito crear cuenta en SonarCloud
+
+      - name: Recopilar reporte
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: SistemaAsistenciaNomina/sistema_asistencia_y_nomina/coverage/lcov.info
+
+      - name: Compilar app
+        run: flutter build apk --release
+
+      - name: Guardar artefacto del build
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: SistemaAsistenciaNomina/sistema_asistencia_y_nomina/build/app/outputs/flutter-apk/app-release.apk
+
+  # Corre en paralelo con el de Flutter
+  test-api:
+    name: CI - Probar API Python
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ApiSistemaAsistenciaNomina
+    steps:
+      - name: Checkout de codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verificar que la API arranca y responde
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 &
+          sleep 8
+          curl --fail --silent http://127.0.0.1:8000/ || exit 1
+          echo "API respondio correctamente"
+
+  # ---------------- CD (solo main) ----------------
+  docker-build-push:
+    name: CD - Construir imagen y publicar en Docker Hub
+    runs-on: ubuntu-latest
+    needs: [build-and-test, test-api]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout de codigo
+        uses: actions/checkout@v4
+
+      # Buildx para cache de capas y compilar tambien para ARM (Raspberry Pi)
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar sesion en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # La etiqueta con el SHA permite volver a una version anterior
+      - name: Construir imagen Docker y publicarla
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ApiSistemaAsistenciaNomina
+          file: ./ApiSistemaAsistenciaNomina/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: CD - Desplegar en staging
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+    steps:
+      # Si el servidor todavia no existe, el pipeline no debe ponerse en rojo
+      - name: Verificar configuracion del servidor
+        id: check
+        run: |
+          if [ -n "${{ secrets.STAGING_HOST }}" ]; then
+            echo "configurado=true" >> $GITHUB_OUTPUT
+          else
+            echo "configurado=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Desplegar contenedor en staging
+        if: steps.check.outputs.configurado == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            IMAGEN="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+            docker pull "$IMAGEN"
+            docker stop api-staging || true
+            docker rm api-staging || true
+            docker run -d \
+              --name api-staging \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              -v api-staging-data:/app/data \
+              -e SECRET_KEY="${{ secrets.API_SECRET_KEY }}" \
+              "$IMAGEN"
+
+      # Sin esto el pipeline diria "exito" aunque la API quedara caida
+      - name: Verificar que staging responde
+        if: steps.check.outputs.configurado == 'true'
+        run: |
+          sleep 10
+          curl --fail --silent http://${{ secrets.STAGING_HOST }}:8000/ || exit 1
+          echo "Staging respondio correctamente"
+
+      - name: Simular despliegue (servidor no configurado)
+        if: steps.check.outputs.configurado == 'false'
+        run: |
+          echo "=== SIMULACION DE DESPLIEGUE A STAGING ==="
+          echo "Imagen: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "  1. docker pull de la imagen publicada"
+          echo "  2. docker stop/rm del contenedor anterior"
+          echo "  3. docker run del contenedor nuevo en el puerto 8000"
+          echo "  4. prueba de humo contra el endpoint raiz"
+          echo "Configura el Secret STAGING_HOST para activar el despliegue real."
+
+  # El environment "production" lleva required reviewers: el job se pausa
+  # hasta que se aprueba desde GitHub. Es sistema de nomina, no queremos
+  # que un error llegue solo al pago de la gente.
+  deploy-production:
+    name: CD - Desplegar en produccion (aprobacion manual)
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout de codigo
+        uses: actions/checkout@v4
+
+      # Para el movil, "produccion" es publicar el APK como Release
+      - name: Descargar el APK generado en la fase CI
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-apk
+          path: ./release
+
+      - name: Publicar Release con el APK versionado
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="v1.0.${{ github.run_number }}"
+          gh release create "$VERSION" ./release/app-release.apk \
+            --title "Sistema Asistencia y Nomina $VERSION" \
+            --notes "Release automatico generado por el pipeline CD.
+          Commit: ${{ github.sha }}
+          Imagen API: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+      - name: Verificar configuracion del servidor de produccion
+        id: checkprod
+        run: |
+          if [ -n "${{ secrets.PROD_HOST }}" ]; then
+            echo "configurado=true" >> $GITHUB_OUTPUT
+          else
+            echo "configurado=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Se despliega la misma imagen que paso por staging, no se reconstruye
+      - name: Desplegar contenedor en produccion
+        if: steps.checkprod.outputs.configurado == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            IMAGEN="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+            docker pull "$IMAGEN"
+            docker stop api-prod || true
+            docker rm api-prod || true
+            docker run -d \
+              --name api-prod \
+              --restart unless-stopped \
+              -p 8080:8000 \
+              -v api-prod-data:/app/data \
+              -e SECRET_KEY="${{ secrets.API_SECRET_KEY }}" \
+              "$IMAGEN"
+
+      - name: Verificar que produccion responde
+        if: steps.checkprod.outputs.configurado == 'true'
+        run: |
+          sleep 10
+          curl --fail --silent http://${{ secrets.PROD_HOST }}:8080/ || exit 1
+          echo "Produccion respondio correctamente"
+
+      - name: Simular despliegue en produccion (servidor no configurado)
+        if: steps.checkprod.outputs.configurado == 'false'
+        run: |
+          echo "=== SIMULACION DE DESPLIEGUE A PRODUCCION ==="
+          echo "Imagen: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "APK publicado como GitHub Release v1.0.${{ github.run_number }}"
+          echo "Configura el Secret PROD_HOST para activar el despliegue real."
+
+  notify-on-failure:
+    name: Notificar al servidor el pipeline fallido
+    runs-on: ubuntu-latest
+    needs: [build-and-test, test-api, docker-build-push, deploy-staging, deploy-production]
+    # always() porque si no, un job cancelado no dispara la notificacion
+    if: always() && contains(needs.*.result, 'failure')
+    steps:
+      - name: Notificar por discord
+        # Agregar webhook de discord para notificación automática
+        # Similar al webhook de cobblemon spawn notifications
+        env:
+          WEBHOOK_URL: ${{secrets.DISCORD_WEBHOOK}}
+        run: |
+          curl -sS -H "Content-Type: application/json" -d "{\"content\": \"**Pipeline fallido** en ${{ github.repository }}\\n• Rama: ${{ github.ref_name }}\\n• Autor: ${{ github.actor }}\\n• Detalles: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" "$WEBHOOK_URL"

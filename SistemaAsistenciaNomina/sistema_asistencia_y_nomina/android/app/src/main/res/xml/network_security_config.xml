@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Checklist de seguridad: todo el tráfico HTTP (texto plano) queda BLOQUEADO.
+     Única excepción: 10.0.2.2, que es la PC host vista desde el emulador y se
+     usa solo durante el desarrollo local. Cualquier otra llamada que no sea
+     HTTPS es rechazada por el sistema operativo. En producción, la API se
+     serviría detrás de HTTPS y esta excepción se eliminaría. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>
