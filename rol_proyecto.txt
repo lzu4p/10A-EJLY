@@ -1,1 +1,1 @@
-Rol: Login y API
+Rol: Modulo de asistencia y seguridad
