@@ -122,7 +122,7 @@ pipeline tarda lo que el más lento, no la suma de ambos.
 | `VOLUME ["/app/data"]` | Los datos **no deben vivir en la capa de imagen**. En un volumen sobreviven al reemplazo del contenedor: cada despliegue sustituye el código sin borrar la información. |
 | `EXPOSE 8000` | Documenta el puerto de escucha. |
 | `HEALTHCHECK` | Docker consulta el endpoint raíz cada 30 s. Un orquestador puede detectar el contenedor caído y reiniciarlo automáticamente. |
-| `CMD` con seed condicional | En el primer arranque (volumen vacío) ejecuta el *seed* para que la API tenga usuarios y productos iniciales. En arranques posteriores lo omite: así un reinicio **no borra** los datos existentes. |
+| `CMD` con seed condicional | En el primer arranque (volumen vacío) ejecuta el *seed* para que la API tenga usuarios, empleados y asistencia iniciales. En arranques posteriores lo omite: así un reinicio **no borra** los datos existentes. |
 | `exec uvicorn` en el `CMD` | `exec` hace que uvicorn sea el proceso principal (PID 1) y reciba las señales del sistema. Sin él, `docker stop` no cerraría limpiamente la aplicación. |
 | `--host 0.0.0.0` en el `CMD` | Sin esto, uvicorn solo escucharía dentro del contenedor y sería inaccesible desde fuera. |
 
@@ -132,7 +132,7 @@ pipeline tarda lo que el más lento, no la suma de ambos.
 |---|---|
 | Construcción de la imagen | Correcta — 282 MB |
 | Usuario en ejecución | `uid=1000(appuser)` — **no root** |
-| Seed automático en el primer arranque | 2 usuarios y 3 productos importados |
+| Seed automático en el primer arranque | 2 usuarios, 8 empleados y 120 registros de asistencia |
 | `HEALTHCHECK` | Estado `healthy` |
 | CRUD **sin** token | `HTTP 403` (rechazado) |
 | CRUD **con** token | `HTTP 200` |

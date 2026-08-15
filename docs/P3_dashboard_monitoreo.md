@@ -56,7 +56,7 @@ El tablero se organiza según los tres tipos de señal que permiten entender un 
 │  FILA 3 — LOGS  (filtro: [ solo errores ▾ ] [ buscar… ] )                     │
 │  ┌──────────────────────────────────────────────────────────────────────────┐│
 │  │ 14:32:07  INFO   POST /login       200  usuario=izu           88 ms      ││
-│  │ 14:32:19  INFO   GET  /productos   200  registros=3           41 ms      ││
+│  │ 14:32:19  INFO   GET  /asistencias 200  registros=8           41 ms      ││
 │  │ 14:33:02  WARN   POST /login       401  usuario=desconocido   35 ms      ││
 │  │ 14:35:44  ERROR  PUT  /usuarios/2  500  IntegrityError       120 ms      ││
 │  │ 14:35:45  INFO   HEALTHCHECK       200  contenedor healthy     12 ms     ││

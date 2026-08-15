@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../screens/productos_screen.dart';
+import '../screens/empleados_screen.dart';
+import '../screens/asistencia_screen.dart';
+import '../screens/nomina_screen.dart';
 import '../screens/usuarios_screen.dart';
 import '../screens/login_screen.dart';
 
+/// Menú lateral con los módulos del sistema.
 class AppDrawer extends StatelessWidget {
   final Map<String, dynamic> usuario;
   final String pantallaActual;
@@ -13,6 +16,18 @@ class AppDrawer extends StatelessWidget {
     required this.usuario,
     required this.pantallaActual,
   });
+
+  /// Navega al módulo elegido reemplazando la pantalla actual, para que el
+  /// historial no acumule una pila infinita al saltar entre secciones.
+  void _ir(BuildContext context, String destino, Widget pantalla) {
+    Navigator.pop(context);
+    if (pantallaActual != destino) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => pantalla),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,41 +74,56 @@ class AppDrawer extends StatelessWidget {
           ),
           const Divider(),
 
-          // Navegación
-          ListTile(
-            leading: const Icon(Icons.inventory_2_outlined),
-            title: const Text('Productos'),
-            selected: pantallaActual == 'productos',
-            onTap: () {
-              Navigator.pop(context);
-              if (pantallaActual != 'productos') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProductosScreen(usuario: usuario),
+          // --- Módulos del sistema ---
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.how_to_reg_outlined),
+                  title: const Text('Asistencia'),
+                  selected: pantallaActual == 'asistencia',
+                  onTap: () => _ir(
+                    context,
+                    'asistencia',
+                    AsistenciaScreen(usuario: usuario),
                   ),
-                );
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.manage_accounts_outlined),
-            title: const Text('Administración de usuarios'),
-            selected: pantallaActual == 'usuarios',
-            onTap: () {
-              Navigator.pop(context);
-              if (pantallaActual != 'usuarios') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => UsuariosScreen(usuario: usuario),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.badge_outlined),
+                  title: const Text('Empleados'),
+                  selected: pantallaActual == 'empleados',
+                  onTap: () => _ir(
+                    context,
+                    'empleados',
+                    EmpleadosScreen(usuario: usuario),
                   ),
-                );
-              }
-            },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.payments_outlined),
+                  title: const Text('Nómina'),
+                  selected: pantallaActual == 'nomina',
+                  onTap: () => _ir(
+                    context,
+                    'nomina',
+                    NominaScreen(usuario: usuario),
+                  ),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.manage_accounts_outlined),
+                  title: const Text('Administración de usuarios'),
+                  selected: pantallaActual == 'usuarios',
+                  onTap: () => _ir(
+                    context,
+                    'usuarios',
+                    UsuariosScreen(usuario: usuario),
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          const Spacer(),
           const Divider(),
 
           // Cerrar sesión — SafeArea evita que quede bajo la barra de Android

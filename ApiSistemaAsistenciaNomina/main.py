@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import auth, usuarios, productos, publico
+from app.routers import auth, usuarios, empleados, asistencias, nomina, publico
 
 # Crea las tablas si no existen (el seed las recrea con datos).
 Base.metadata.create_all(bind=engine)
@@ -31,7 +31,9 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(usuarios.router)
-app.include_router(productos.router)
+app.include_router(empleados.router)
+app.include_router(asistencias.router)
+app.include_router(nomina.router)
 app.include_router(publico.router)
 
 

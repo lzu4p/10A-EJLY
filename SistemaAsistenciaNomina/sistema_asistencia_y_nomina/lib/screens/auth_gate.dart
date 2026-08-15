@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
-import 'productos_screen.dart';
+import 'asistencia_screen.dart';
 
 /// Pantalla inicial: decide a dónde entrar al abrir la app.
 ///
 /// Lee el token guardado y lo valida contra la API (/me). Si sigue vigente
-/// entra directo a Productos; si no (expirado, logout previo, crash) va al login.
+/// entra directo a Asistencia; si no (expirado, logout previo, crash) va al login.
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
@@ -30,7 +30,7 @@ class _AuthGateState extends State<AuthGate> {
       context,
       MaterialPageRoute(
         builder: (_) => usuario != null
-            ? ProductosScreen(usuario: usuario)
+            ? AsistenciaScreen(usuario: usuario)
             : const LoginScreen(),
       ),
     );

@@ -18,3 +18,6 @@ MOCKAPI_BASE = os.getenv(
     "MOCKAPI_BASE",
     "https://65f3ab00105614e654a0cefb.mockapi.io",
 )
+
+# Hora limite de entrada: despues de esta hora, la asistencia se marca "retardo".
+HORA_LIMITE_ENTRADA = os.getenv("HORA_LIMITE_ENTRADA", "09:00")

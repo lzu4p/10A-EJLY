@@ -157,7 +157,7 @@ manejo de errores de red— se prueba **manualmente**.
 | Frente | Pruebas concretas | Herramienta |
 |---|---|---|
 | API — autenticación | Login correcto, contraseña incorrecta, token expirado, token inválido, logout invalida el token | `pytest` + `TestClient` de FastAPI |
-| API — CRUD | Crear/editar producto, usuario duplicado devuelve 409, acceso sin token devuelve 403 | `pytest` |
+| API — CRUD | Alta/edicion de empleado, checada duplicada devuelve 409, acceso sin token devuelve 403 | `pytest` |
 | App — widgets | El formulario valida campos vacíos, el botón de mostrar/ocultar contraseña funciona, la tabla se llena con datos simulados | `flutter_test` + `mockito` |
 
 **Métricas que mejora:**

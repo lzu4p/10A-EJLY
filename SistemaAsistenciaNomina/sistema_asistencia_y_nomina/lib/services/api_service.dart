@@ -62,6 +62,19 @@ class ApiService {
     }
   }
 
+  // Extrae el mensaje de error que envía FastAPI en el campo "detail".
+  static String _detalle(http.Response r, String porDefecto) {
+    try {
+      final d = jsonDecode(r.body);
+      if (d is Map && d['detail'] != null) {
+        return '${d['detail']}';
+      }
+    } catch (_) {
+      // El cuerpo no era JSON: se usa el mensaje por defecto.
+    }
+    return porDefecto;
+  }
+
   // ---------- Autenticación ----------
 
   /// Inicia sesión. Guarda el token y devuelve los datos del usuario, o null
@@ -156,44 +169,154 @@ class ApiService {
     }
   }
 
-  // ---------- Productos ----------
+  // ---------- Empleados ----------
 
-  static Future<List<Map<String, dynamic>>> fetchProductos() async {
+  static Future<List<Map<String, dynamic>>> fetchEmpleados() async {
     final h = await _headers();
     final r = await _enviar(
-        () => http.get(Uri.parse('$_base/productos'), headers: h));
+        () => http.get(Uri.parse('$_base/empleados'), headers: h));
     _verificarSesion(r);
     if (r.statusCode != 200) {
-      throw Exception('Error al obtener productos: ${r.statusCode}');
+      throw Exception('Error al obtener empleados: ${r.statusCode}');
     }
     final List data = jsonDecode(r.body);
     return data.cast<Map<String, dynamic>>();
   }
 
-  static Future<void> crearProducto(Map<String, dynamic> datos) async {
+  static Future<void> crearEmpleado(Map<String, dynamic> datos) async {
     final h = await _headers();
     final r = await _enviar(() => http.post(
-          Uri.parse('$_base/productos'),
+          Uri.parse('$_base/empleados'),
           headers: h,
           body: jsonEncode(datos),
         ));
     _verificarSesion(r);
     if (r.statusCode != 201) {
-      throw Exception('Error al crear producto: ${r.statusCode}');
+      throw Exception(_detalle(r, 'Error al crear empleado: ${r.statusCode}'));
     }
   }
 
-  static Future<void> actualizarProducto(
+  static Future<void> actualizarEmpleado(
       String id, Map<String, dynamic> datos) async {
     final h = await _headers();
     final r = await _enviar(() => http.put(
-          Uri.parse('$_base/productos/$id'),
+          Uri.parse('$_base/empleados/$id'),
           headers: h,
           body: jsonEncode(datos),
         ));
     _verificarSesion(r);
     if (r.statusCode != 200) {
-      throw Exception('Error al actualizar producto: ${r.statusCode}');
+      throw Exception(
+          _detalle(r, 'Error al actualizar empleado: ${r.statusCode}'));
     }
+  }
+
+  // ---------- Asistencia ----------
+
+  /// Registros de asistencia. Se puede filtrar por día o por empleado.
+  static Future<List<Map<String, dynamic>>> fetchAsistencias({
+    String? fecha,
+    int? empleadoId,
+  }) async {
+    final h = await _headers();
+    final params = <String, String>{};
+    if (fecha != null) params['fecha'] = fecha;
+    if (empleadoId != null) params['empleado_id'] = '$empleadoId';
+
+    final uri =
+        Uri.parse('$_base/asistencias').replace(queryParameters: params);
+    final r = await _enviar(() => http.get(uri, headers: h));
+    _verificarSesion(r);
+    if (r.statusCode != 200) {
+      throw Exception('Error al obtener asistencias: ${r.statusCode}');
+    }
+    final List data = jsonDecode(r.body);
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  /// Estado de la checada del usuario en el día actual (null si no ha checado).
+  static Future<Map<String, dynamic>?> miAsistenciaDeHoy() async {
+    final h = await _headers();
+    final r = await _enviar(
+        () => http.get(Uri.parse('$_base/asistencias/hoy'), headers: h));
+    _verificarSesion(r);
+    if (r.statusCode != 200) {
+      return null;
+    }
+    final data = jsonDecode(r.body);
+    return data == null ? null : data as Map<String, dynamic>;
+  }
+
+  /// Marca la entrada del usuario. Devuelve el mensaje de confirmación.
+  static Future<String> checarEntrada() async {
+    final h = await _headers();
+    final r = await _enviar(
+        () => http.post(Uri.parse('$_base/asistencias/checar'), headers: h));
+    _verificarSesion(r);
+    if (r.statusCode != 200) {
+      throw Exception(_detalle(r, 'No se pudo registrar la entrada'));
+    }
+    return '${jsonDecode(r.body)['mensaje']}';
+  }
+
+  /// Marca la salida del usuario. Devuelve el mensaje de confirmación.
+  static Future<String> checarSalida() async {
+    final h = await _headers();
+    final r = await _enviar(() =>
+        http.post(Uri.parse('$_base/asistencias/checar-salida'), headers: h));
+    _verificarSesion(r);
+    if (r.statusCode != 200) {
+      throw Exception(_detalle(r, 'No se pudo registrar la salida'));
+    }
+    return '${jsonDecode(r.body)['mensaje']}';
+  }
+
+  /// Captura manual hecha por el administrador.
+  static Future<void> capturarAsistencia(Map<String, dynamic> datos) async {
+    final h = await _headers();
+    final r = await _enviar(() => http.post(
+          Uri.parse('$_base/asistencias'),
+          headers: h,
+          body: jsonEncode(datos),
+        ));
+    _verificarSesion(r);
+    if (r.statusCode != 201) {
+      throw Exception(_detalle(r, 'Error al capturar asistencia'));
+    }
+  }
+
+  static Future<void> actualizarAsistencia(
+      String id, Map<String, dynamic> datos) async {
+    final h = await _headers();
+    final r = await _enviar(() => http.put(
+          Uri.parse('$_base/asistencias/$id'),
+          headers: h,
+          body: jsonEncode(datos),
+        ));
+    _verificarSesion(r);
+    if (r.statusCode != 200) {
+      throw Exception(_detalle(r, 'Error al actualizar asistencia'));
+    }
+  }
+
+  // ---------- Nómina ----------
+
+  /// Calcula la nómina del periodo: días trabajados x salario diario.
+  static Future<Map<String, dynamic>> calcularNomina({
+    String? inicio,
+    String? fin,
+  }) async {
+    final h = await _headers();
+    final params = <String, String>{};
+    if (inicio != null) params['inicio'] = inicio;
+    if (fin != null) params['fin'] = fin;
+
+    final uri = Uri.parse('$_base/nomina').replace(queryParameters: params);
+    final r = await _enviar(() => http.get(uri, headers: h));
+    _verificarSesion(r);
+    if (r.statusCode != 200) {
+      throw Exception('Error al calcular la nómina: ${r.statusCode}');
+    }
+    return jsonDecode(r.body) as Map<String, dynamic>;
   }
 }

@@ -39,7 +39,13 @@ jobs:
       - name: Configurar SDK de Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          # Version FIJA, no flotante ('3.x'). Motivo: el 2026-08-12 salio
+          # Flutter 3.47.0 y el pipeline empezo a fallar sin que cambiara una
+          # sola linea del proyecto, porque la nueva version convirtio en
+          # errores los avisos de compatibilidad de AGP/Kotlin. Fijar la
+          # version garantiza que el CI compile con el mismo toolchain que se
+          # valido en local: builds reproducibles.
+          flutter-version: '3.44.3'
           channel: 'stable'
 
       - name: Descargar dependencias
