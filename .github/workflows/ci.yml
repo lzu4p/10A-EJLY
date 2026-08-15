@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml
 # Pipeline CI/CD - Sistema de Control de Asistencia y Nómina
-# Lenguaje: Flutter (app movil) + Python/FastAPI (API)
+# Lenguaje: Flutter + Python
 # Arquitectura Desarrollo: MVVM
 # Patron Diseño: Repository + Observer
 # Metodología: Scrum
@@ -15,17 +15,13 @@ on:
   pull_request:
     branches: [ main ]
 
-# Variables reutilizables en todo el workflow.
 env:
   IMAGE_NAME: sistema-asistencia-nomina-api
   FLUTTER_DIR: SistemaAsistenciaNomina/sistema_asistencia_y_nomina
   API_DIR: ApiSistemaAsistenciaNomina
 
 jobs:
-  # ===========================================================================
-  # FASE CI - Integracion Continua
-  # Se ejecuta en TODAS las ramas configuradas y en los pull request.
-  # ===========================================================================
+  # ---------------- CI ----------------
   build-and-test:
     name: CI - Compilar y probar app Flutter
     runs-on: ubuntu-latest
@@ -39,12 +35,7 @@ jobs:
       - name: Configurar SDK de Flutter
         uses: subosito/flutter-action@v2
         with:
-          # Version FIJA, no flotante ('3.x'). Motivo: el 2026-08-12 salio
-          # Flutter 3.47.0 y el pipeline empezo a fallar sin que cambiara una
-          # sola linea del proyecto, porque la nueva version convirtio en
-          # errores los avisos de compatibilidad de AGP/Kotlin. Fijar la
-          # version garantiza que el CI compile con el mismo toolchain que se
-          # valido en local: builds reproducibles.
+          # Version fija: con '3.x' se instalaba la mas nueva y rompia el build
           flutter-version: '3.44.3'
           channel: 'stable'
 
@@ -79,10 +70,7 @@ jobs:
           name: app-release-apk
           path: SistemaAsistenciaNomina/sistema_asistencia_y_nomina/build/app/outputs/flutter-apk/app-release.apk
 
-  # ---------------------------------------------------------------------------
-  # CI de la API: valida que el backend importe y responda antes de empaquetarlo.
-  # Corre en paralelo con el job de Flutter porque son independientes.
-  # ---------------------------------------------------------------------------
+  # Corre en paralelo con el de Flutter
   test-api:
     name: CI - Probar API Python
     runs-on: ubuntu-latest
@@ -110,30 +98,20 @@ jobs:
           curl --fail --silent http://127.0.0.1:8000/ || exit 1
           echo "API respondio correctamente"
 
-  # ===========================================================================
-  # FASE CD - Entrega Continua
-  # Solo se ejecuta en la rama main: develop se queda en la fase CI.
-  # ===========================================================================
-
-  # --- Construir la imagen Docker y publicarla en el registro ---
+  # ---------------- CD (solo main) ----------------
   docker-build-push:
     name: CD - Construir imagen y publicar en Docker Hub
     runs-on: ubuntu-latest
-    # Encadenamiento: solo empaqueta si TODAS las pruebas pasaron.
     needs: [build-and-test, test-api]
-    # Condicion de rama: nunca publica desde develop ni desde un pull request.
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout de codigo
         uses: actions/checkout@v4
 
-      # Buildx habilita cache de capas y builds multi-plataforma (util para
-      # que la imagen tambien corra en Raspberry Pi, que es ARM).
+      # Buildx para cache de capas y compilar tambien para ARM (Raspberry Pi)
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Autenticacion contra el registro. Las credenciales viajan como Secrets,
-      # nunca escritas en el YAML (checklist: sin credenciales hardcodeadas).
       - name: Iniciar sesion en Docker Hub
         uses: docker/login-action@v3
         with:
@@ -141,9 +119,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build y push en una sola accion. Se publican dos etiquetas:
-      #   :latest -> siempre apunta a la ultima version estable.
-      #   :<sha>  -> identifica el commit exacto, permite rollback preciso.
+      # La etiqueta con el SHA permite volver a una version anterior
       - name: Construir imagen Docker y publicarla
         uses: docker/build-push-action@v6
         with:
@@ -153,22 +129,18 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          # Reutiliza capas entre ejecuciones: builds notablemente mas rapidos.
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # --- Desplegar en el entorno de pruebas del equipo (automatico) ---
   deploy-staging:
     name: CD - Desplegar en staging
     runs-on: ubuntu-latest
     needs: docker-build-push
     if: github.ref == 'refs/heads/main'
-    # Registra el despliegue en la pestana Environments de GitHub (trazabilidad).
     environment:
       name: staging
     steps:
-      # Comprueba si el servidor de staging ya esta configurado como Secret.
-      # Evita que el pipeline falle mientras el entorno aun no existe.
+      # Si el servidor todavia no existe, el pipeline no debe ponerse en rojo
       - name: Verificar configuracion del servidor
         id: check
         run: |
@@ -178,8 +150,6 @@ jobs:
             echo "configurado=false" >> $GITHUB_OUTPUT
           fi
 
-      # Despliegue real: entra por SSH al servidor de staging, descarga la
-      # imagen recien publicada y reemplaza el contenedor en ejecucion.
       - name: Desplegar contenedor en staging
         if: steps.check.outputs.configurado == 'true'
         uses: appleboy/ssh-action@v1.2.0
@@ -200,8 +170,7 @@ jobs:
               -e SECRET_KEY="${{ secrets.API_SECRET_KEY }}" \
               "$IMAGEN"
 
-      # Prueba de humo: confirma que el contenedor quedo respondiendo.
-      # Sin esta verificacion, el pipeline diria "exito" aunque la API este caida.
+      # Sin esto el pipeline diria "exito" aunque la API quedara caida
       - name: Verificar que staging responde
         if: steps.check.outputs.configurado == 'true'
         run: |
@@ -209,42 +178,34 @@ jobs:
           curl --fail --silent http://${{ secrets.STAGING_HOST }}:8000/ || exit 1
           echo "Staging respondio correctamente"
 
-      # Modo simulacion: mientras no exista el servidor, documenta que haria.
       - name: Simular despliegue (servidor no configurado)
         if: steps.check.outputs.configurado == 'false'
         run: |
           echo "=== SIMULACION DE DESPLIEGUE A STAGING ==="
           echo "Imagen: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          echo "Acciones que se ejecutarian en el servidor:"
           echo "  1. docker pull de la imagen publicada"
           echo "  2. docker stop/rm del contenedor anterior"
           echo "  3. docker run del contenedor nuevo en el puerto 8000"
           echo "  4. prueba de humo contra el endpoint raiz"
           echo "Configura el Secret STAGING_HOST para activar el despliegue real."
 
-  # --- Desplegar en produccion (requiere APROBACION MANUAL) ---
-  # El environment "production" se configura en GitHub con "required reviewers":
-  # el job queda EN PAUSA hasta que el lider del equipo aprueba desde la interfaz.
-  # Justificacion: es un sistema de NOMINA. Un despliegue defectuoso afecta el
-  # calculo del pago de los empleados, por lo que se exige revision humana.
+  # El environment "production" lleva required reviewers: el job se pausa
+  # hasta que se aprueba desde GitHub. Es sistema de nomina, no queremos
+  # que un error llegue solo al pago de la gente.
   deploy-production:
     name: CD - Desplegar en produccion (aprobacion manual)
     runs-on: ubuntu-latest
-    # Solo se promueve a produccion lo que ya paso por staging.
     needs: deploy-staging
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-    # Permiso necesario para publicar el Release con el APK.
     permissions:
       contents: write
     steps:
       - name: Checkout de codigo
         uses: actions/checkout@v4
 
-      # --- Componente 1: la app movil ---
-      # El artefacto de la app es el APK. "Produccion" para el movil significa
-      # publicar una version descargable (en un caso real: Google Play Store).
+      # Para el movil, "produccion" es publicar el APK como Release
       - name: Descargar el APK generado en la fase CI
         uses: actions/download-artifact@v4
         with:
@@ -262,7 +223,6 @@ jobs:
           Commit: ${{ github.sha }}
           Imagen API: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
-      # --- Componente 2: la API ---
       - name: Verificar configuracion del servidor de produccion
         id: checkprod
         run: |
@@ -272,9 +232,7 @@ jobs:
             echo "configurado=false" >> $GITHUB_OUTPUT
           fi
 
-      # Promocion de artefacto: se despliega EXACTAMENTE la misma imagen (por
-      # SHA) que ya fue validada en staging. No se reconstruye nada, por lo que
-      # es imposible que produccion reciba un binario distinto al probado.
+      # Se despliega la misma imagen que paso por staging, no se reconstruye
       - name: Desplegar contenedor en produccion
         if: steps.checkprod.outputs.configurado == 'true'
         uses: appleboy/ssh-action@v1.2.0
@@ -306,20 +264,15 @@ jobs:
         if: steps.checkprod.outputs.configurado == 'false'
         run: |
           echo "=== SIMULACION DE DESPLIEGUE A PRODUCCION ==="
-          echo "Imagen promovida desde staging (mismo SHA, sin reconstruir):"
-          echo "  ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Imagen: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           echo "APK publicado como GitHub Release v1.0.${{ github.run_number }}"
           echo "Configura el Secret PROD_HOST para activar el despliegue real."
 
-  # ===========================================================================
-  # Notificaciones
-  # ===========================================================================
   notify-on-failure:
     name: Notificar al servidor el pipeline fallido
     runs-on: ubuntu-latest
-    # Vigila toda la cadena CI/CD, no solo la compilacion de Flutter.
     needs: [build-and-test, test-api, docker-build-push, deploy-staging, deploy-production]
-    # always() es necesario: sin el, un job cancelado impediria la notificacion.
+    # always() porque si no, un job cancelado no dispara la notificacion
     if: always() && contains(needs.*.result, 'failure')
     steps:
       - name: Notificar por discord
